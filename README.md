@@ -1,1 +1,0 @@
-# gs-fortune-teller
