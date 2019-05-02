@@ -1,4 +1,4 @@
-:toc:
+:toc: 
 :icons: font
 :source-highlighter: prettify
 :project_id: draft-gs-template
@@ -11,7 +11,7 @@ It's not what YOU will build, but what you enable users to build.  This new func
 
 == What you'll need
 
-* A Git Repository you want to add this functionality to.  This guide uses https://github.com/spring-cloud-services-samples/fortune-teller as an example.
+* A Git Repository you want to add this functionality to.  This guide uses link:https://github.com/spring-cloud-services-samples/fortune-teller as an example.
 * A Pivotal Web Services account -- for testing purposes.
 
 
