@@ -3,22 +3,29 @@
 :source-highlighter: prettify
 :project_id: draft-gs-template
 
-This guide walks you through the process of adding a Push-to-PWS button to your repo.
+image::https://push-to.cfapps.io/ui/assets/images/Push-to-Pivotal-Light.svg["PWS"]
+
+This guide walks you through the process of adding a Push-to-PWS button to your repo and testing the functionality.
 
 == What you'll build
 
 It's not what YOU will build, but what you enable users to build.  This new functionality lets users simply push a button to spin up your application on Pivotal Web Services.
 
+image::https://push-to.cfapps.io/ui/assets/images/Push-to-Pivotal-Light.svg["PWS,200]
+
+
+
 == What you'll need
 
-* A Git Repository you want to add this functionality to.  This guide uses link:https://github.com/spring-cloud-services-samples/fortune-teller as an example.
-* A Pivotal Web Services account -- for testing purposes.
+* A Git Repository you want to add this functionality to.  This guide uses https://github.com/spring-cloud-services-samples/fortune-teller  as an example.
+
+* A Pivotal Web Services account -- for testing purposes. You can sign up at https://run.pivotal.io[here].
 
 
 [[initial]]
 == Fork/Clone the repo
 
-If this is your own repo, you can clone it, but for this example we are using the Fortune Teller app, so we will need to fork it first and then clone it.
+We wil need to clone our repo, so that we can make changes to it.  If this is your personal repo, you can clone it immediately, but for this example we are using the Fortune Teller app, so we will need to fork it first and then clone it.
 ----
 git clone https://github.com/<username>/fortune-teller
 ----
@@ -143,7 +150,7 @@ cf m | grep registry
 cf m | config
 ----
 
-Take the info from thes commands and add it to the services.yml file
+Take the info from these commands and add it to the services.yml file
 ----
 service_name: fortunes-config-server
 service: p-config-server
@@ -162,7 +169,7 @@ service: cleardb
 service_plan: spark
 ----
 
-For this particular example, the configuration server needs to be configured a bit more.  You can point it at a specific repo directory to grab it's configuration.
+For this particular example, the configuration server needs to be configured a bit more.  You can point it at a specific repo directory to grab it's configuration.  The details of this can be found https://docs.run.pivotal.io/spring-cloud-services/config-server/configuring-with-git.html[in the Spring Cloud Config Server on PWS docs]
 
 ----
 service_name: fortunes-config-server
@@ -188,9 +195,8 @@ service_plan: spark
 
 == Create the Push-to-PWS Button
 
-Add the path to your Git Repo here:
-
-* https://push-to.cfapps.io/ui/create-button
+To create the Push-to-PWS Button browse to: https://push-to.cfapps.io/ui/create-button
+Input the path to your repo and hit CREATE PUSH BUTTON.
 
 Copy the HTML snippet out and put in your README.md file in the repo.
 
@@ -206,7 +212,7 @@ git push
 * Create a new space to deploy your app for testing.
 * Bring up your Repo and Click on the new Push-to-PWS button
 
-The repo should be pre-poulated, but you will need to select the space you just create.  Then click build and push app.
+The repo should be pre-poulated, but you will need to select the space you just create.  Then click build and push app.  An output terminal should dislay while the app builds and deploys.
 
 == Summary
 
