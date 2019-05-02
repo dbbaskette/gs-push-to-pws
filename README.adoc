@@ -1,85 +1,215 @@
-:spring_version: current
-:spring_boot_version: 2.1.3.RELEASE
-:Controller: http://docs.spring.io/spring/docs/{spring_version}/javadoc-api/org/springframework/stereotype/Controller.html
-:DispatcherServlet: http://docs.spring.io/spring/docs/{spring_version}/javadoc-api/org/springframework/web/servlet/DispatcherServlet.html
-:SpringApplication: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/SpringApplication.html
-:ResponseBody: http://docs.spring.io/spring/docs/{spring_version}/javadoc-api/org/springframework/web/bind/annotation/ResponseBody.html
 :toc:
 :icons: font
 :source-highlighter: prettify
 :project_id: draft-gs-template
-This guide walks you through the process of creating a Spring application.
+
+This guide walks you through the process of adding a Push-to-PWS button to your repo.
 
 == What you'll build
 
-You'll build a Spring application.
-
-<a href="https://push-to.cfapps.io?repo=https%3A%2F%2Fgithub.com%2Fspring-cloud-services-samples%2Ffortune-teller">
- 	<img src="https://push-to.cfapps.io/ui/assets/images/Push-to-Pivotal-Light.svg" width="200" alt="Push">
-</a>
+It's not what YOU will build, but what you enable users to build.  This new functionality lets users simply push a button to spin up your application on Pivotal Web Services.
 
 == What you'll need
 
-:java_version: 1.8
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/prereq_editor_jdk_buildtools.adoc[]
-
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/how_to_complete_this_guide.adoc[]
-
-
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-gradle.adoc[]
-
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-maven.adoc[]
-
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-sts.adoc[]
-
+* A Git Repository you want to add this functionality to.  This guide uses https://github.com/spring-cloud-services-samples/fortune-teller as an example.
+* A Pivotal Web Services account -- for testing purposes.
 
 
 [[initial]]
-== Create a resource controller
+== Fork/Clone the repo
 
-Create a new controller for your Spring application:
-
-`src/main/java/hello/GreetingController.java`
-[source,java]
+If this is your own repo, you can clone it, but for this example we are using the Fortune Teller app, so we will need to fork it first and then clone it.
 ----
-include::complete/src/main/java/hello/GreetingController.java[]
+git clone https://github.com/<username>/fortune-teller
 ----
 
-NOTE: The above example does not specify `GET` vs. `PUT`, `POST`, and so forth, because `@RequestMapping` maps all HTTP operations by default. Use `@RequestMapping(method=GET)` to narrow this mapping.
 
+== Create push-to-pws directory
 
-== Make the application executable
+The application and services manifest files that get created will be stored here.
 
-Although it is possible to package this service as a traditional link:/understanding/WAR[WAR] file for deployment to an external application server, the simpler approach demonstrated below creates a standalone application. You package everything in a single, executable JAR file, driven by a good old Java `main()` method. Along the way, you use Spring's support for embedding the link:/understanding/Tomcat[Tomcat] servlet container as the HTTP runtime, instead of deploying to an external instance.
-
-
-`src/main/java/hello/Application.java`
-[source,java]
 ----
-include::complete/src/main/java/hello/Application.java[]
+cd fortune-teller
+mkdir push-to-pws
 ----
 
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/spring-boot-application.adoc[]
-
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/build_an_executable_jar_subhead.adoc[]
-
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/build_an_executable_jar_with_both.adoc[]
-
-
-Logging output is displayed. The service should be up and running within a few seconds.
+This example repo already has our application manifest created, but it needs to be renamed to manifest.yml.  This repo also has a manifest-pcf.yml that can be deleted.
+----
+mv manifest-pws.yml push-to-pws/manifest.yml
+----
 
 
-== Test the application
+== Manifest Changes
 
-Now that the application is running, you can test it.
+The push-to-pws functioanlity requires that any user-accessible application/service be listed first in the manifest.  In the fortune-teller manifest we have 2 applications defined: a UI and a service.
+----
+---
+applications:
+- name: fortunes
+  memory: 1024M
+  random-route: true
+  path: fortune-teller-fortune-service/target/fortune-teller-fortune-service-0.0.1-SNAPSHOT.jar
+  instances: 1
+  services:
+  - fortunes-db
+  - fortunes-config-server
+  - fortunes-service-registry
+- name: fortune-ui
+  memory: 1024M
+  random-route: true
+  path: fortune-teller-ui/target/fortune-teller-ui-0.0.1-SNAPSHOT.jar
+  instances: 1
+  services:
+  - fortunes-config-server
+  - fortunes-service-registry
+  - fortunes-circuit-breaker-dashboard
+----
 
+Since, the UI is the user-accessible application it should be listed first, so the manifest should be changed to look like this:
+----
+---
+applications:
+- name: fortune-ui
+  memory: 1024M
+  random-route: true
+  path: fortune-teller-ui/target/fortune-teller-ui-0.0.1-SNAPSHOT.jar
+  instances: 1
+  services:
+  - fortunes-config-server
+  - fortunes-service-registry
+  - fortunes-circuit-breaker-dashboard
+- name: fortunes
+  memory: 1024M
+  random-route: true
+  path: fortune-teller-fortune-service/target/fortune-teller-fortune-service-0.0.1-SNAPSHOT.jar
+  instances: 1
+  services:
+  - fortunes-db
+  - fortunes-config-server
+  - fortunes-service-registry
+----
+
+== Service Definition File
+The Service Definition file (services.yml) is the file that will define any backing services that are required for the application when running on PWS.  This file is defined in the same format as the definitions in the continuous delivery tool, Spinnaker.
+----
+service_name:
+service:
+service_plan:
+---
+service_name:
+service:
+service_plan:
+---
+----
+
+The services required for fortune-teller can be found in the manifest.yml file
+
+* fortunes-config-server
+
+* fortunes-service-registry
+
+* fortunes-circuit-breaker-dashboard
+
+* fortunes-db
+
+
+These should be added to the service.yml file
+----
+service_name: fortunes-config-server
+service: 
+service_plan: 
+---
+service_name: fortunes-service-registry
+service: 
+service_plan: 
+---
+service_name: fortunes-circuit-breaker-dashboard
+service: 
+service_plan: 
+---
+service_name: fortunes-db
+service: 
+service_plan: 
+----
+
+Next step will be to fill in the details for this file.  These can ge obtained from looking at the PWS CF Marketplace.  The easiest way to get this info is to login to your test PWS instance via the CLI:
+
+----
+cf login -a api.run.pivotal.io
+cf m
+cf m | grep SQL
+cf m | grep dashboard
+cf m | grep registry
+cf m | config
+----
+
+Take the info from thes commands and add it to the services.yml file
+----
+service_name: fortunes-config-server
+service: p-config-server
+service_plan: trial
+---
+service_name: fortunes-service-registry
+service: p-service-registry
+service_plan: trial
+---
+service_name: fortunes-circuit-breaker-dashboard
+service: p-circuit-breaker-dashboard
+service_plan: trial
+---
+service_name: fortunes-db
+service: cleardb
+service_plan: spark
+----
+
+For this particular example, the configuration server needs to be configured a bit more.  You can point it at a specific repo directory to grab it's configuration.
+
+----
+service_name: fortunes-config-server
+service: p-config-server
+service_plan: trial
+parameters:
+  git:
+    uri: https://github.com/dbbaskette/fortune-teller
+    searchPaths: configuration
+---
+service_name: fortunes-service-registry
+service: p-service-registry
+service_plan: trial
+---
+service_name: fortunes-circuit-breaker-dashboard
+service: p-circuit-breaker-dashboard
+service_plan: trial
+---
+service_name: fortunes-db
+service: cleardb
+service_plan: spark
+----
+
+== Create the Push-to-PWS Button
+
+Add the path to your Git Repo here:
+
+* https://push-to.cfapps.io/ui/create-button
+
+Copy the HTML snippet out and put in your README.md file in the repo.
+
+== Commit and Push Repo changes
+----
+git add .
+git commit -m "Push to PWS"
+git push
+----
+
+== Testing
+* Login to your PWS account
+* Create a new space to deploy your app for testing.
+* Bring up your Repo and Click on the new Push-to-PWS button
+
+The repo should be pre-poulated, but you will need to select the space you just create.  Then click build and push app.
 
 == Summary
 
-Congratulations! You've just developed a Spring application! 
+Congratulations! You've just deployed your first Push-to-PWS button.
 
-
-
-
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/footer.adoc[]
 
